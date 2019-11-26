@@ -1,0 +1,13 @@
+{
+  "name": "umi-plugin-typed-route",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:zhanba/umi-plugin-typed-route.git",
+  "author": "zhanba <c5e1856@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@umijs/fabric": "^1.2.1",
+    "father": "^2.28.0",
+    "umi-types": "^0.5.7"
+  }
+}
