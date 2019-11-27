@@ -1,7 +1,7 @@
 {
   "name": "umi-plugin-typed-route",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "lib/index.js",
   "repository": "git@github.com:zhanba/umi-plugin-typed-route.git",
   "author": "zhanba <c5e1856@gmail.com>",
   "license": "MIT",
