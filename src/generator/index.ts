@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import outdent from "outdent";
 import chalk from "chalk";
 import { format, resolveConfig } from "prettier";

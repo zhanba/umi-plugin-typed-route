@@ -5,7 +5,9 @@ import { merge } from "lodash";
 import { getDefaultOptions } from "./generator/utils";
 import { Paths } from "./generator/types";
 
-interface PluginConfig {}
+interface PluginConfig {
+  name: string;
+}
 
 const getPathsFromRoutes = (routes: IRoute[]): Paths => {
   const paths: Paths = {};

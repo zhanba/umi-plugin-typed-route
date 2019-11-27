@@ -5,15 +5,43 @@
   "repository": "git@github.com:zhanba/umi-plugin-typed-route.git",
   "author": "zhanba <c5e1856@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "father build",
+    "lint": "eslint src --fix --ext .ts",
+    "test": "father test",
+    "cov": "father test --coverage",
+    "prepublishOnly": "npm run build",
+    "pub": "npm publish"
+  },
   "devDependencies": {
     "@umijs/fabric": "^1.2.1",
     "father": "^2.28.0",
+    "husky": "^3.1.0",
+    "lint-staged": "^9.5.0",
     "umi-types": "^0.5.7"
   },
   "dependencies": {
+    "@types/node": "^12.12.14",
     "@types/prettier": "^1.19.0",
     "lodash": "^4.17.15",
     "outdent": "^0.7.0",
+    "path-to-regexp": "^3.0.0",
     "prettier": "^1.19.1"
+  },
+  "files": [
+    "lib",
+    "package.json",
+    "README.md"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{.ts,.tsx}": [
+      "eslint",
+      "git add"
+    ]
   }
 }
