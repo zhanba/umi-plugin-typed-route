@@ -11,7 +11,7 @@ history.push(`/app/${projectId}/${userId}`);
 ```ts
 history.push(pathFactory.app.welcome());
 history.push(pathFactory.app.project({projectId: 123}));
-history.push(pathFactory.app/project.user({projectId: 123, userId: "tom"}));
+history.push(pathFactory.app.project.user({projectId: 123, userId: "tom"}));
 ```
 
 ## Install
