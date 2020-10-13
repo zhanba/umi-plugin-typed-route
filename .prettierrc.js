@@ -1,3 +1,5 @@
-import { prettier } from "@umijs/fabric";
+const fabric = require('@umijs/fabric');
 
-module.exports = prettier;
+module.exports = {
+  ...fabric.prettier,
+};

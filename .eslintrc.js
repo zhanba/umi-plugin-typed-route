@@ -1,3 +1,3 @@
-import { eslint } from "@umijs/fabric";
-
-module.exports = eslint;
+module.exports = {
+    extends: '@umijs/fabric/eslint'
+}

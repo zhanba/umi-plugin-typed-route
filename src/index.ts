@@ -1,9 +1,12 @@
-import { IApi, IRoute } from "umi-types";
-import { generateTypeScriptFile } from "./generator/index";
-import { join } from "path";
-import { merge } from "lodash";
-import { getDefaultOptions } from "./generator/utils";
-import { Paths } from "./generator/types";
+import { IApi, IRoute } from 'umi';
+import { generateTypeScriptFile } from './generator/index';
+import { join } from 'path';
+import { merge } from 'lodash';
+import outdent from 'outdent';
+import { format, resolveConfig } from 'prettier';
+import { getDefaultOptions } from './generator/utils';
+import { Paths } from './generator/types';
+import { generateCode } from './generator/generate';
 
 interface PluginConfig {
   name: string;
@@ -29,19 +32,50 @@ const getPathsFromRoutes = (routes: IRoute[]): Paths => {
 };
 
 export default (api: IApi, opts: PluginConfig) => {
-  api.beforeDevServer(() => {
-    const {
-      routes,
-      paths: { cwd }
-    } = api;
-    const outputTsFilePath = join(cwd, "src", "typedRoute.ts");
-    const prettierConfigFilePath = join(cwd, "src", ".prettierrc.js");
-    const paths = getPathsFromRoutes(routes);
-    const options = merge(getDefaultOptions(), opts);
-    generateTypeScriptFile(
-      outputTsFilePath,
-      { paths, options },
-      prettierConfigFilePath
-    );
+  api.describe({
+    key: 'typedroute',
+    config: {
+      schema(joi) {
+        return joi.boolean();
+      },
+    },
+  });
+
+  api.onGenerateFiles({
+    fn: async () => {
+      const {
+        config: { routes },
+        paths: { cwd },
+      } = api;
+
+      const prettierConfig = join(cwd || '.', '.prettierrc.js');
+      const paths = getPathsFromRoutes(routes || []);
+      const options = merge(getDefaultOptions(), opts);
+
+      const codeString = await prettifyCode(
+        outdent`
+        ${generateCode(paths, options.variableName)}
+      `,
+        prettierConfig,
+      );
+
+      api.writeTmpFile({
+        path: 'plugin-typed-route/typedRoute.ts',
+        content: codeString,
+      });
+    },
   });
 };
+
+async function prettifyCode(codeString: string, prettierConfig: string): Promise<string> {
+  if (typeof prettierConfig === 'string') {
+    try {
+      const config = await resolveConfig(prettierConfig);
+      return format(codeString, { ...config, parser: 'typescript' });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  return format(codeString, { parser: 'typescript' });
+}
