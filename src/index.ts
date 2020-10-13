@@ -1,5 +1,4 @@
 import { IApi, IRoute } from 'umi';
-import { generateTypeScriptFile } from './generator/index';
 import { join } from 'path';
 import { merge } from 'lodash';
 import outdent from 'outdent';
@@ -65,6 +64,8 @@ export default (api: IApi, opts: PluginConfig) => {
       });
     },
   });
+
+  api.addUmiExports(() => [{ exportAll: true, source: '../plugin-typed-route/typedRoute' }]);
 };
 
 async function prettifyCode(codeString: string, prettierConfig: string): Promise<string> {
@@ -79,3 +80,5 @@ async function prettifyCode(codeString: string, prettierConfig: string): Promise
 
   return format(codeString, { parser: 'typescript' });
 }
+
+export { makePathsFrom, Params } from './generator/path-utils';

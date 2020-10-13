@@ -1,15 +1,15 @@
-import { set } from "lodash";
-import outdent from "outdent";
+import { set } from 'lodash';
+import outdent from 'outdent';
 
-import { Paths, VariableName } from "./types";
+import { Paths, VariableName } from './types';
 import {
   recursiveForEach,
   convert,
   codeStringify,
   getDefaultOptions,
   mergeTypeString,
-  ParamsTypeString
-} from "./utils";
+  ParamsTypeString,
+} from './utils';
 
 interface ImportInfo {
   // `true` if below variable is used
@@ -32,12 +32,12 @@ const VARIABLE_NAME = getDefaultOptions().variableName;
 export function generateCode(paths: Paths, variableName: VariableName): string {
   const { staticPath, pathFactory, ParamsInterface, importInfo } = parse(paths);
   const usedImportKeys = Object.keys(importInfo).filter(
-    key => !!importInfo[key as keyof ImportInfo]
+    key => !!importInfo[key as keyof ImportInfo],
   );
   const importString =
     usedImportKeys.length > 0
-      ? `import { ${usedImportKeys.join(",")} } from "typed-path-generator"`
-      : "";
+      ? `import { ${usedImportKeys.join(',')} } from "umi-plugin-typed-route"`
+      : '';
 
   return outdent`
     ${importString}
@@ -61,29 +61,20 @@ function parse(paths: Paths): ParseResult {
     ParamsInterface: {},
     staticPath: {},
     pathFactory: {},
-    importInfo: {}
+    importInfo: {},
   };
 
   recursiveForEach(paths, (pathString, currentRefPath) => {
     const { path, paramsTypeString } = convert(pathString);
 
-    const mergedParamsType = mergeTypeString(
-      ...Object.values(paramsTypeString)
-    );
+    const mergedParamsType = mergeTypeString(...Object.values(paramsTypeString));
     const pathRef = getPathRef([VARIABLE_NAME.staticPath, ...currentRefPath]);
-    const paramsRef = getParamsRef([
-      VARIABLE_NAME.ParamsInterface,
-      ...currentRefPath
-    ]);
+    const paramsRef = getParamsRef([VARIABLE_NAME.ParamsInterface, ...currentRefPath]);
 
     updateImportInfo(paramsTypeString);
-    set(result.ParamsInterface, currentRefPath, mergedParamsType || "void");
+    set(result.ParamsInterface, currentRefPath, mergedParamsType || 'void');
     set(result.staticPath, currentRefPath, `'${path}'`);
-    set(
-      result.pathFactory,
-      currentRefPath,
-      `makePathsFrom<${paramsRef}>(${pathRef})`
-    );
+    set(result.pathFactory, currentRefPath, `makePathsFrom<${paramsRef}>(${pathRef})`);
   });
 
   return result;
@@ -113,7 +104,7 @@ function parse(paths: Paths): ParseResult {
     required,
     requiredRepeat,
     optional,
-    optionalRepeat
+    optionalRepeat,
   }: ParamsTypeString) {
     const { importInfo } = result;
 
