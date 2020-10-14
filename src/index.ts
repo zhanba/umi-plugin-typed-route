@@ -43,9 +43,11 @@ export default (api: IApi, opts: PluginConfig) => {
   api.onGenerateFiles({
     fn: async () => {
       const {
-        config: { routes },
         paths: { cwd },
+        logger,
       } = api;
+
+      const routes = await api.getRoutes();
 
       const prettierConfig = join(cwd || '.', '.prettierrc.js');
       const paths = getPathsFromRoutes(routes || []);
