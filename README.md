@@ -32,14 +32,21 @@ export default {
 
 add `name` proprety for every route.
 
-为每个路由配置`name`属性(全英文)，建议为每个路由配置title属性（中文）
+为每个路由配置下列属性：
+- `name`: required, 路由的英文名称，使用在代码中, 全英文
+- `query`: optional, 查询字符串query string的key值数组,如`?sort=desc`则配置`["sort"]`
+- `title`: optional, 当前路由和页面的名称，建议中文
+- `description`: optional, 当前路由和页面的描述
+
+例子🌰：
 ```ts
 export default {
     routes: [
         {
-            path: '.',
+            path: '/',
             name: 'app',
-            title: '首页'
+            title: '首页',
+            description: '应用首页'
         }
     ]
 }

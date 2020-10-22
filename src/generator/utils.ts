@@ -1,6 +1,6 @@
-import pathToRegexp from "path-to-regexp";
-import { ParamsType } from "./path-utils";
-import { Options } from "./types";
+import pathToRegexp from 'path-to-regexp';
+import { ParamsType } from './path-utils';
+import { Options } from './types';
 
 export interface ParamsTypeString {
   required: string;
@@ -11,10 +11,11 @@ export interface ParamsTypeString {
 
 export const getDefaultOptions = (): Options => ({
   variableName: {
-    staticPath: "staticPath",
-    pathFactory: "pathFactory",
-    ParamsInterface: "ParamsInterface"
-  }
+    staticPath: 'staticPath',
+    pathFactory: 'pathFactory',
+    ParamsInterface: 'ParamsInterface',
+    QueryInterface: 'QueryInterface',
+  },
 });
 
 export function codeStringify(code: object): string {
@@ -24,14 +25,14 @@ export function codeStringify(code: object): string {
   return replaceInfo.reduce(
     // '{ "key": "value" }' => '{ "key": value }'
     (result, { origin, stringified }) => result.replace(stringified, origin),
-    stringifiedCode
+    stringifiedCode,
   );
 
   function collectReplaceInfo(_key: string, value: string | object) {
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       replaceInfo.push({
         origin: value,
-        stringified: JSON.stringify(value)
+        stringified: JSON.stringify(value),
       });
     }
 
@@ -42,12 +43,12 @@ export function codeStringify(code: object): string {
 export function recursiveForEach<Output>(
   obj: any,
   translate: (value: any, path: string[]) => Output,
-  parentPath: string[] = []
+  parentPath: string[] = [],
 ) {
   Object.keys(obj).forEach(key => {
     const currentPath = [...parentPath, key];
     const value = obj[key];
-    if (typeof value === "object") {
+    if (typeof value === 'object') {
       recursiveForEach(value, translate, currentPath);
     } else {
       translate(value, currentPath);
@@ -62,29 +63,21 @@ export function convert(pathString: string) {
 
   return {
     path: pathString,
-    paramsTypeString: getParamsTypeString(keys)
+    paramsTypeString: getParamsTypeString(keys),
   };
 }
 
-function getParamsTypeString(keys: pathToRegexp.Key[]): ParamsTypeString {
+export function getParamsTypeString(keys: pathToRegexp.Key[]): ParamsTypeString {
   const makeParamsTypeString = makeTypeString(ParamsType.Params);
   const makeRepeatParamsTypeString = makeTypeString(ParamsType.RepeatParams);
 
-  const {
-    requiredKeys,
-    requiredRepeatKeys,
-    optionalKeys,
-    optionalRepeatKeys
-  } = keys.reduce<{
+  const { requiredKeys, requiredRepeatKeys, optionalKeys, optionalRepeatKeys } = keys.reduce<{
     requiredKeys: pathToRegexp.Key[];
     requiredRepeatKeys: pathToRegexp.Key[];
     optionalKeys: pathToRegexp.Key[];
     optionalRepeatKeys: pathToRegexp.Key[];
   }>(
-    (
-      { requiredKeys, requiredRepeatKeys, optionalKeys, optionalRepeatKeys },
-      key
-    ) => {
+    ({ requiredKeys, requiredRepeatKeys, optionalKeys, optionalRepeatKeys }, key) => {
       if (key.optional) {
         if (key.repeat) {
           optionalRepeatKeys.push(key);
@@ -103,30 +96,28 @@ function getParamsTypeString(keys: pathToRegexp.Key[]): ParamsTypeString {
         requiredKeys,
         requiredRepeatKeys,
         optionalKeys,
-        optionalRepeatKeys
+        optionalRepeatKeys,
       };
     },
     {
       requiredKeys: [],
       requiredRepeatKeys: [],
       optionalKeys: [],
-      optionalRepeatKeys: []
-    }
+      optionalRepeatKeys: [],
+    },
   );
 
   const required = makeParamsTypeString(requiredKeys);
   const requiredRepeat = makeRepeatParamsTypeString(requiredRepeatKeys);
 
   const optional = partialTypeString(makeParamsTypeString(optionalKeys));
-  const optionalRepeat = partialTypeString(
-    makeRepeatParamsTypeString(optionalRepeatKeys)
-  );
+  const optionalRepeat = partialTypeString(makeRepeatParamsTypeString(optionalRepeatKeys));
 
   return {
     required,
     requiredRepeat,
     optional,
-    optionalRepeat
+    optionalRepeat,
   };
 }
 
@@ -141,14 +132,14 @@ function partialTypeString(type: string) {
 function makeTypeString(Type: ParamsType) {
   return (keys: pathToRegexp.Key[]) => {
     if (keys.length < 1) {
-      return "";
+      return '';
     } else {
       const withSingleQuote = (key: pathToRegexp.Key) => `'${key.name}'`;
-      return `${Type}<${keys.map(withSingleQuote).join(" | ")}>`;
+      return `${Type}<${keys.map(withSingleQuote).join(' | ')}>`;
     }
   };
 }
 
 export function mergeTypeString(...types: string[]) {
-  return types.filter(Boolean).join(" & ");
+  return types.filter(Boolean).join(' & ');
 }

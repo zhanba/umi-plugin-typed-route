@@ -1,7 +1,7 @@
 import { set } from 'lodash';
 import outdent from 'outdent';
-
-import { Paths, VariableName } from './types';
+import pathToRegexp from 'path-to-regexp';
+import { Paths, VariableName, Route } from './types';
 import {
   recursiveForEach,
   convert,
@@ -9,6 +9,7 @@ import {
   getDefaultOptions,
   mergeTypeString,
   ParamsTypeString,
+  getParamsTypeString,
 } from './utils';
 
 interface ImportInfo {
@@ -22,6 +23,7 @@ interface ParseResult {
   staticPath: { [key: string]: object | string };
   pathFactory: { [key: string]: object | string };
   ParamsInterface: { [key: string]: object | string };
+  QueryInterface: { [key: string]: object | string };
   importInfo: ImportInfo;
 }
 
@@ -29,8 +31,9 @@ interface ParseResult {
 // and the custom one is only used for export
 const VARIABLE_NAME = getDefaultOptions().variableName;
 
-export function generateCode(paths: Paths, variableName: VariableName): string {
-  const { staticPath, pathFactory, ParamsInterface, importInfo } = parse(paths);
+export function generateCode(routes: Route[], variableName: VariableName): string {
+  const { staticPath, pathFactory, ParamsInterface, QueryInterface, importInfo } = parse(routes);
+  console.log('QueryInterface', QueryInterface);
   const usedImportKeys = Object.keys(importInfo).filter(
     key => !!importInfo[key as keyof ImportInfo],
   );
@@ -44,21 +47,45 @@ export function generateCode(paths: Paths, variableName: VariableName): string {
 
     interface ${VARIABLE_NAME.ParamsInterface} ${codeStringify(ParamsInterface)}
 
+    interface ${VARIABLE_NAME.QueryInterface} ${codeStringify(QueryInterface)}
+
     const ${VARIABLE_NAME.staticPath} = ${codeStringify(staticPath)};
 
     const ${VARIABLE_NAME.pathFactory} = ${codeStringify(pathFactory)};
 
     export {
       ${VARIABLE_NAME.ParamsInterface} as ${variableName.ParamsInterface},
+      ${VARIABLE_NAME.QueryInterface} as ${variableName.QueryInterface},
       ${VARIABLE_NAME.staticPath} as ${variableName.staticPath},
       ${VARIABLE_NAME.pathFactory} as ${variableName.pathFactory},
     }
   `;
 }
 
-function parse(paths: Paths): ParseResult {
+const getPathsFromRoutes = (routes: Route[]): Paths => {
+  const paths: Paths = {};
+  routes.forEach(route => {
+    // 必须配置route的name属性，属性必须为英文
+    if (route.name === undefined) {
+      return;
+    }
+    const { routes: childRoutes } = route;
+    if (childRoutes !== undefined && childRoutes.length > 0) {
+      paths[route.name] = getPathsFromRoutes(childRoutes);
+    } else {
+      if (route.path) {
+        paths[route.name] = route.path;
+      }
+    }
+  });
+  return paths;
+};
+
+function parse(routes: Route[]): ParseResult {
+  const paths = getPathsFromRoutes(routes || []);
   const result: ParseResult = {
     ParamsInterface: {},
+    QueryInterface: {},
     staticPath: {},
     pathFactory: {},
     importInfo: {},
@@ -68,13 +95,22 @@ function parse(paths: Paths): ParseResult {
     const { path, paramsTypeString } = convert(pathString);
 
     const mergedParamsType = mergeTypeString(...Object.values(paramsTypeString));
+    const mergedQueryType = mergeTypeString(
+      ...Object.values(getParamsTypeString(getQueryRef(currentRefPath))),
+    );
     const pathRef = getPathRef([VARIABLE_NAME.staticPath, ...currentRefPath]);
     const paramsRef = getParamsRef([VARIABLE_NAME.ParamsInterface, ...currentRefPath]);
+    const querysRef = getParamsRef([VARIABLE_NAME.QueryInterface, ...currentRefPath]);
 
     updateImportInfo(paramsTypeString);
     set(result.ParamsInterface, currentRefPath, mergedParamsType || 'void');
+    set(result.QueryInterface, currentRefPath, mergedQueryType || 'void');
     set(result.staticPath, currentRefPath, `'${path}'`);
-    set(result.pathFactory, currentRefPath, `makePathsFrom<${paramsRef}>(${pathRef})`);
+    set(
+      result.pathFactory,
+      currentRefPath,
+      `makePathsFrom<${paramsRef}, ${querysRef}>(${pathRef})`,
+    );
   });
 
   return result;
@@ -119,5 +155,28 @@ function parse(paths: Paths): ParseResult {
     if (isUsedRepeatParamsType && !importInfo.RepeatParams) {
       importInfo.RepeatParams = true;
     }
+  }
+
+  function getQueryRef(refPaths: string[]): pathToRegexp.Key[] {
+    const queryRef: pathToRegexp.Key[] = [];
+    let currentRoutes = routes;
+    refPaths.forEach((name, index) => {
+      const currentRoute = currentRoutes.find(route => route.name === name);
+      console.log('---- refff -------', queryRef, index, name, currentRoute);
+      currentRoute !== undefined &&
+        currentRoute.query !== undefined &&
+        queryRef.push(
+          ...currentRoute.query.map(query => ({
+            name: query,
+            optional: true,
+            prefix: '',
+            delimiter: '',
+            repeat: false,
+            pattern: '',
+          })),
+        );
+      currentRoutes = currentRoute?.routes ?? [];
+    }, []);
+    return queryRef;
   }
 }

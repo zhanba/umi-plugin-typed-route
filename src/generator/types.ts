@@ -1,18 +1,27 @@
 export interface YAML {
-  paths: Paths
-  options: Options
+  paths: Paths;
+  options: Options;
 }
 
 export interface Paths {
-  [key: string]: string | Paths
+  [key: string]: string | Paths;
+}
+
+export interface Route {
+  name: string;
+  title: string;
+  path: string;
+  query: string[];
+  routes: Route[];
 }
 
 export interface Options {
-  variableName: VariableName
+  variableName: VariableName;
 }
 
 export interface VariableName {
-  staticPath: string
-  pathFactory: string
-  ParamsInterface: string
+  staticPath: string;
+  pathFactory: string;
+  ParamsInterface: string;
+  QueryInterface: string;
 }

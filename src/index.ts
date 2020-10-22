@@ -4,31 +4,11 @@ import { merge } from 'lodash';
 import outdent from 'outdent';
 import { format, resolveConfig } from 'prettier';
 import { getDefaultOptions } from './generator/utils';
-import { Paths } from './generator/types';
 import { generateCode } from './generator/generate';
 
 interface PluginConfig {
   name: string;
 }
-
-const getPathsFromRoutes = (routes: IRoute[]): Paths => {
-  const paths: Paths = {};
-  routes.forEach(route => {
-    // 必须配置route的name属性，属性必须为英文
-    if (route.name === undefined) {
-      return;
-    }
-    const { routes: childRoutes } = route;
-    if (childRoutes !== undefined && childRoutes.length > 0) {
-      paths[route.name] = getPathsFromRoutes(childRoutes);
-    } else {
-      if (route.path) {
-        paths[route.name] = route.path;
-      }
-    }
-  });
-  return paths;
-};
 
 export default (api: IApi, opts: PluginConfig) => {
   api.describe({
@@ -50,12 +30,12 @@ export default (api: IApi, opts: PluginConfig) => {
       const routes = await api.getRoutes();
 
       const prettierConfig = join(cwd || '.', '.prettierrc.js');
-      const paths = getPathsFromRoutes(routes || []);
+
       const options = merge(getDefaultOptions(), opts);
 
       const codeString = await prettifyCode(
         outdent`
-        ${generateCode(paths, options.variableName)}
+        ${generateCode(routes, options.variableName)}
       `,
         prettierConfig,
       );
