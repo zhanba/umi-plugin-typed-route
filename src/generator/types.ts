@@ -7,12 +7,12 @@ export interface Paths {
   [key: string]: string | Paths;
 }
 
-export interface Route {
+export interface IRoute {
   name: string;
   title: string;
   path: string;
   query: string[];
-  routes: Route[];
+  routes: IRoute[];
 }
 
 export interface Options {

@@ -24,7 +24,7 @@ export function makePathsFrom<Params, Querys extends StringifiableRecord>(
 ): (params: Params, querys: Querys) => string;
 
 export function makePathsFrom<Params, Querys extends StringifiableRecord>(path: string) {
-  return (params?: Params, querys?: Querys) => {
+  return (params: Params, querys?: Querys) => {
     const search = querys === undefined ? '' : '?' + stringify(querys);
     return makeMainPathsFrom<Params>(path)(params) + search;
   };

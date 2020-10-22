@@ -1,7 +1,7 @@
 import { set } from 'lodash';
 import outdent from 'outdent';
 import pathToRegexp from 'path-to-regexp';
-import { Paths, VariableName, Route } from './types';
+import { Paths, VariableName, IRoute } from './types';
 import {
   recursiveForEach,
   convert,
@@ -31,9 +31,8 @@ interface ParseResult {
 // and the custom one is only used for export
 const VARIABLE_NAME = getDefaultOptions().variableName;
 
-export function generateCode(routes: Route[], variableName: VariableName): string {
+export function generateCode(routes: IRoute[], variableName: VariableName): string {
   const { staticPath, pathFactory, ParamsInterface, QueryInterface, importInfo } = parse(routes);
-  console.log('QueryInterface', QueryInterface);
   const usedImportKeys = Object.keys(importInfo).filter(
     key => !!importInfo[key as keyof ImportInfo],
   );
@@ -62,7 +61,7 @@ export function generateCode(routes: Route[], variableName: VariableName): strin
   `;
 }
 
-const getPathsFromRoutes = (routes: Route[]): Paths => {
+const getPathsFromRoutes = (routes: IRoute[]): Paths => {
   const paths: Paths = {};
   routes.forEach(route => {
     // 必须配置route的name属性，属性必须为英文
@@ -81,7 +80,7 @@ const getPathsFromRoutes = (routes: Route[]): Paths => {
   return paths;
 };
 
-function parse(routes: Route[]): ParseResult {
+function parse(routes: IRoute[]): ParseResult {
   const paths = getPathsFromRoutes(routes || []);
   const result: ParseResult = {
     ParamsInterface: {},
@@ -162,7 +161,6 @@ function parse(routes: Route[]): ParseResult {
     let currentRoutes = routes;
     refPaths.forEach((name, index) => {
       const currentRoute = currentRoutes.find(route => route.name === name);
-      console.log('---- refff -------', queryRef, index, name, currentRoute);
       currentRoute !== undefined &&
         currentRoute.query !== undefined &&
         queryRef.push(
